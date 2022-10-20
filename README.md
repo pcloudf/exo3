@@ -7,6 +7,5 @@
 
 # Commentaires
 ```
-Merci beaucoup pour ta pédagogie. 
-Pierre.
+Vive la Juve !
 ```
