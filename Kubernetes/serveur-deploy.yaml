@@ -1,0 +1,104 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: exo3
+  namespace: exo3
+
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: exo3
+  template:
+    metadata:
+      labels:
+        app: exo3
+    
+    spec:
+      containers:
+      - name: exo3-container
+        image: psey8/flask:1.1
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: exo3
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: exo3
+  name: mariadb-pod
+  labels:
+    app: mariadb
+
+spec:
+  containers:
+  - name: mariadb-container
+    image: mariadb:10.4
+    ports:
+    - containerPort: 3306
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "500m"
+      limits:
+        memory: "256Mi"
+        cpu: "750m"
+    env:
+    - name: MARIADB_ROOT_PASSWORD
+      value: rcl
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: exo3
+  name: mariadb # le nom donné au service utilisé en résolution DNS !!!
+
+spec:
+  type: ClusterIP # valeur par défaut
+  selector:
+    app: mariadb
+  ports:
+  - targetPort: 3306
+    port: 3306
+    protocol: TCP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: exo3
+  name: exo3 
+
+spec:
+  type: ClusterIP 
+  selector:
+    app: exo3
+  ports:
+  - targetPort: 5000
+    port: 5000
+    protocol: TCP
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: exo3-ha
+  namespace: exo3
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: exo3-deploy
+  minReplicas: 1
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

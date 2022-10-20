@@ -1,0 +1,23 @@
+---
+version: "3"
+services:
+
+  mariadb:
+    image: mariadb:10.4
+    environment:
+      MYSQL_ROOT_PASSWORD: rcl
+    ports:
+    - 3306:3306
+    volumes:
+     - ./mysql:/var/lib/mysql
+
+  serveurweb:
+    build: .
+    image: psey8/flask:1.1
+    ports:
+    - 5000:5000
+    restart: always
+    volumes:
+    - "./public:/app/public"
+    depends_on:
+      - mariadb
